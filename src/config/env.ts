@@ -8,7 +8,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DUCKDB_PATH: z.string().default('./data/processed/analytics.duckdb'),
   UPLOAD_DIR: z.string().default('./data/uploads'),
-  DEFAULT_ROLLING_DAYS: z.coerce.number().default(90)
+  DEFAULT_ROLLING_DAYS: z.coerce.number().default(90),
+  REDIS_URL: z.string().default('redis://localhost:6379')
 });
 
 export const env = envSchema.parse(process.env);

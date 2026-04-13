@@ -1,34 +1,47 @@
-# Tory Burch Email Analytics Platform (Scaffold)
+# Tory Burch Email Analytics Platform (MVP Backend + Frontend)
 
-This repository now includes a runnable **backend + frontend scaffold** generated from the `EMAIL_ANALYTICS_PLATFORM.md` specification.
+This repository now includes a working MVP implementation aligned to the requested next steps:
 
-## What is implemented
+1. Real DuckDB-backed analytics queries
+2. Chunked upload endpoint + Redis/BullMQ job tracking
+3. Dashboard widget engine + persisted layouts
+4. AI/ML-style async insights endpoints
 
-- TypeScript Express API scaffold with routes for:
-  - `GET /api/health`
-  - `GET /api/analytics/overall`
-  - `GET /api/analytics/flows`
-  - `GET /api/analytics/campaigns`
-  - `POST /api/upload/:type`
-  - `GET /api/upload/jobs`
-- DuckDB configuration and migration/seed scripts
-- React + Vite frontend scaffold with Dashboard and Upload pages
-- Docker Compose for Redis local dependency
+## Implemented Features
 
-## Repository layout
+### 1) Real analytics queries (DuckDB)
 
-```
-.
-├── src/                 # API server
-├── client/              # React frontend
-├── scripts/             # migrate + seed scripts
-├── docker/              # Docker assets
-├── data/                # local storage folders
-├── EMAIL_ANALYTICS_PLATFORM.md
-└── README.md
-```
+- `GET /api/analytics/overall?days=90`
+- `GET /api/analytics/flows`
+- `GET /api/analytics/campaigns`
 
-## Local development
+These endpoints now run SQL against `campaign_performance` and `flow_performance` instead of returning hardcoded placeholders.
+
+### 2) Chunked upload + job tracking (BullMQ)
+
+- `POST /api/upload/chunk` accepts chunk metadata and chunk file
+- Chunks are assembled when all parts are received
+- Ingestion job is queued in Redis/BullMQ
+- `GET /api/upload/jobs` returns persisted ingestion job history
+
+### 3) Dashboard engine + persisted user layouts
+
+- `POST /api/dashboard` create dashboard
+- `PUT /api/dashboard/:id` update layout/widgets
+- `GET /api/dashboard` list dashboards
+- `GET /api/dashboard/default` get latest dashboard
+
+Layouts are persisted in DuckDB table `dashboard_configs` using JSON payloads.
+
+### 4) AI insights async worker + endpoints
+
+- `POST /api/ai/insights/generate` queues async insight generation
+- `GET /api/ai/insights` returns generated insights
+- `POST /api/ai/query` provides basic NL-style analytics answer routing
+
+Insights are persisted in `ai_insights`.
+
+## Local Development
 
 ### Prerequisites
 
@@ -36,33 +49,33 @@ This repository now includes a runnable **backend + frontend scaffold** generate
 - npm >= 10
 - Docker
 
-### 1) Install dependencies
+### Install
 
 ```bash
 npm install
 npm --prefix client install
 ```
 
-### 2) Configure environment
+### Configure env
 
 ```bash
 cp .env.example .env
 ```
 
-### 3) Start Redis
+### Start Redis
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d redis
 ```
 
-### 4) Run database setup
+### Migrate + seed
 
 ```bash
 npm run migrate
 npm run seed
 ```
 
-### 5) Start app (API + frontend)
+### Start backend + frontend
 
 ```bash
 npm run dev
@@ -71,21 +84,15 @@ npm run dev
 - API: `http://localhost:3001`
 - Frontend: `http://localhost:5173`
 
-## Build for production
+## Frontend Screens
+
+- `/` Dashboard widget layout editor (add + save widgets)
+- `/upload` chunked upload tester
+- `/ai` generate/view async insights
+
+## Production build
 
 ```bash
 npm run build
 npm start
 ```
-
-## Next implementation steps
-
-1. Replace analytics scaffold responses with real DuckDB queries against ingested tables.
-2. Implement chunked file upload + job tracking with Redis/BullMQ workers.
-3. Add dashboard widget engine and persisted user layouts.
-4. Add AI/ML async workers and insights endpoints.
-
-## Notes
-
-- This is an MVP scaffold intended to accelerate implementation.
-- Detailed architecture and target feature set remain in `EMAIL_ANALYTICS_PLATFORM.md`.

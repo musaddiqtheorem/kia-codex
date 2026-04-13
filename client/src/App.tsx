@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom';
+import AIInsightsPage from './pages/AIInsightsPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
 
@@ -9,12 +10,14 @@ const App = () => (
       <nav>
         <Link to="/">Dashboard</Link>
         <Link to="/upload">Upload</Link>
+        <Link to="/ai">AI Insights</Link>
       </nav>
     </header>
     <main>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/ai" element={<AIInsightsPage />} />
       </Routes>
     </main>
   </div>
