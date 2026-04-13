@@ -2,7 +2,7 @@
 
 This repository now includes a working MVP implementation aligned to the requested next steps:
 
-1. Real DuckDB-backed analytics queries
+1. Real DuckDB-backed analytics queries (via @duckdb/node-api)
 2. Chunked upload endpoint + Redis/BullMQ job tracking
 3. Dashboard widget engine + persisted layouts
 4. AI/ML-style async insights endpoints
@@ -60,6 +60,7 @@ npm --prefix client install
 
 ```bash
 cp .env.example .env
+# set REDIS_URL and DUCKDB_PATH if needed
 ```
 
 ### Start Redis

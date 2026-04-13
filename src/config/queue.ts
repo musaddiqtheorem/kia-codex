@@ -5,7 +5,13 @@ import path from 'path';
 import { env } from './env';
 import { runExec, runQuery } from './database';
 
-const connection = { url: env.REDIS_URL };
+const redisUrl = new URL(env.REDIS_URL);
+const connection = {
+  host: redisUrl.hostname,
+  port: Number(redisUrl.port || 6379),
+  username: redisUrl.username || undefined,
+  password: redisUrl.password || undefined
+};
 
 export const ingestionQueue = new Queue('ingestion', { connection });
 export const aiQueue = new Queue('ai-insights', { connection });
@@ -26,9 +32,11 @@ const processAI = async () => {
     FROM campaign_performance;
   `);
 
-  const title = row.revenue > 0 ? 'Revenue opportunity detected' : 'No revenue data ingested yet';
-  const summary = row.revenue > 0
-    ? `Current seeded revenue is $${row.revenue.toFixed(2)} across ${row.delivered} delivered emails.`
+  const delivered = Number(row?.delivered ?? 0);
+  const revenue = Number(row?.revenue ?? 0);
+  const title = revenue > 0 ? 'Revenue opportunity detected' : 'No revenue data ingested yet';
+  const summary = revenue > 0
+    ? `Current seeded revenue is $${revenue.toFixed(2)} across ${delivered} delivered emails.`
     : 'Upload campaign files and run ingestion to generate actionable insights.';
 
   await runExec(`
@@ -51,6 +59,6 @@ export const startWorkers = () => {
 
   aiWorker.on('failed', async (_job, error) => {
     await fs.mkdir(env.UPLOAD_DIR, { recursive: true });
-    await fs.writeFile(path.join(env.UPLOAD_DIR, 'ai-worker-error.log'), error.message, { flag: 'a' });
+    await fs.writeFile(path.join(env.UPLOAD_DIR, 'ai-worker-error.log'), `${error.message}\n`, { flag: 'a' });
   });
 };
