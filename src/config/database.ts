@@ -22,8 +22,9 @@ const withSerial = async <T>(fn: () => Promise<T>) => {
 const getConnection = async (): Promise<DuckConnection> => {
   if (!connectionPromise) {
     connectionPromise = (async () => {
-      const duckdb: any = await import('@duckdb/node-api');
-      const instance = await duckdb.DatabaseInstance.create(env.DUCKDB_PATH);
+      const duckdbModule: any = await import('@duckdb/node-api');
+      const duckdb = duckdbModule.default ?? duckdbModule;
+      const instance = await duckdb.DuckDBInstance.create(env.DUCKDB_PATH);
       return instance.connect();
     })();
   }
