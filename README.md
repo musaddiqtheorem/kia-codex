@@ -1,230 +1,91 @@
-# Tory Burch Email Analytics Platform
+# Tory Burch Email Analytics Platform (Scaffold)
 
-This repository contains the implementation plan and local setup guide for building a full-stack **Email Analytics Platform** from the specification in `EMAIL_ANALYTICS_PLATFORM.md`.
+This repository now includes a runnable **backend + frontend scaffold** generated from the `EMAIL_ANALYTICS_PLATFORM.md` specification.
 
-## 1) What We Are Building
+## What is implemented
 
-A scalable analytics platform that ingests Klaviyo exports (campaign, flow, segment, profile, exclusion files), processes them through a streaming ETL pipeline, and serves:
+- TypeScript Express API scaffold with routes for:
+  - `GET /api/health`
+  - `GET /api/analytics/overall`
+  - `GET /api/analytics/flows`
+  - `GET /api/analytics/campaigns`
+  - `POST /api/upload/:type`
+  - `GET /api/upload/jobs`
+- DuckDB configuration and migration/seed scripts
+- React + Vite frontend scaffold with Dashboard and Upload pages
+- Docker Compose for Redis local dependency
 
-- Overall email performance analytics
-- Flow-level and message-level performance analytics
-- Campaign performance analytics
-- Segment/profile exclusion analytics
-- AI-assisted insights (anomalies, recommendations, NL query)
-- Customizable dashboard widgets and saved views
+## Repository layout
 
-## 2) Proposed Tech Stack
+```
+.
+├── src/                 # API server
+├── client/              # React frontend
+├── scripts/             # migrate + seed scripts
+├── docker/              # Docker assets
+├── data/                # local storage folders
+├── EMAIL_ANALYTICS_PLATFORM.md
+└── README.md
+```
 
-### Backend
-- **Node.js + TypeScript + Express**
-- **DuckDB** for analytics queries
-- **Redis + BullMQ** for ingestion/ML/export jobs
-- **Worker Threads** for heavy parsing and long-running tasks
-
-### Frontend
-- **React + Vite + TypeScript**
-- Dashboard grid with drag/resize widgets
-- Charting with Recharts
-
-### ML / AI
-- Statistical models (anomaly detection, churn, forecasting)
-- Anthropic API integration for insight generation and NL query assistance
-
-## 3) Build Plan (Phased)
-
-## Phase 0 — Project Bootstrap (1–2 days)
-
-**Goals**
-- Create monorepo structure (`src`, `client`, `workers`, `scripts`, `tests`, `data`, `docker`)
-- Add base tooling (`typescript`, `eslint`, `prettier`, `vitest/jest`, `husky` optional)
-- Add environment scaffolding (`.env.example`)
-
-**Deliverables**
-- Running API health endpoint
-- Running React shell app
-- Shared config/constants module
-
----
-
-## Phase 1 — Data Foundation & ETL (4–6 days)
-
-**Goals**
-- Implement streaming parsers for profile/campaign/flow/segment/exclusion files
-- Build ingestion orchestrator with job status tracking
-- Persist normalized tables in DuckDB
-
-**Key requirements**
-- Never load full profile file into memory
-- Validate schema and reject malformed uploads early
-- Track ingestion progress and failure reason per job
-
-**Deliverables**
-- `POST /api/upload/*` endpoints
-- Job status API (`GET /api/upload/jobs`, `GET /api/upload/jobs/:jobId`)
-- Baseline migration + seed scripts
-
----
-
-## Phase 2 — Core Analytics APIs (4–5 days)
-
-**Goals**
-- Implement four primary analytics modules and endpoints:
-  1. Overall performance
-  2. Flow performance
-  3. Individual flow/message drill-down
-  4. Campaign performance
-- Add shared filter framework (days/region/persona/channel/tag)
-
-**Deliverables**
-- `/api/analytics/overall`
-- `/api/analytics/flows`
-- `/api/analytics/flows/:flowId`
-- `/api/analytics/flows/:flowId/messages/:messageId`
-- `/api/analytics/campaigns`
-- Segment/exclusion summary endpoints
-
----
-
-## Phase 3 — Dashboard Customization (3–4 days)
-
-**Goals**
-- Build dashboard page with reusable widgets
-- Enable drag/drop layout, resize, save/load dashboard configs
-- Support global and per-widget filters
-
-**Deliverables**
-- Dashboard CRUD APIs
-- Widget library (KPI, trend, funnel, comparison, tables)
-- Persistent user dashboard preferences
-
----
-
-## Phase 4 — AI/ML Layer (4–6 days)
-
-**Goals**
-- Add nightly anomaly detection and forecasting jobs
-- Integrate AI insight generation service
-- Add subject-line scoring + NL query endpoint
-
-**Deliverables**
-- `/api/ai/insights`, `/api/ai/query`, `/api/ai/subject-line-score`
-- Background workers for ML execution
-- Insight cards and anomaly indicators in UI
-
----
-
-## Phase 5 — Hardening, Performance, Release (3–5 days)
-
-**Goals**
-- Load/performance testing against large profile files
-- Security hardening (auth, rate limit, validation, PII controls)
-- CI/CD and containerized deployment
-
-**Deliverables**
-- Integration/load tests
-- Docker deployment
-- Production runbook and monitoring checklist
-
-## 4) Suggested Milestones
-
-- **M1:** Upload + ETL + data persisted in DuckDB
-- **M2:** Analytics APIs complete and validated
-- **M3:** Dashboard UI with customizable layouts
-- **M4:** AI/ML insights and background jobs live
-- **M5:** Production-ready deployment + observability
-
-## 5) Local Development Setup
-
-> The commands below assume Linux/macOS shell with Node 20+ and npm 10+.
+## Local development
 
 ### Prerequisites
 
-- Node.js `>= 20.0.0`
-- npm `>= 10.0.0`
-- Docker + Docker Compose (for Redis)
+- Node.js >= 20
+- npm >= 10
+- Docker
 
-### 1. Clone and install dependencies
-
-```bash
-git clone <your-repo-url>
-cd kia-codex
-npm install
-```
-
-If frontend is kept under `client/`:
+### 1) Install dependencies
 
 ```bash
-cd client
 npm install
-cd ..
+npm --prefix client install
 ```
 
-### 2. Configure environment
-
-Create `.env` from template:
+### 2) Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Minimum values to set:
-
-- `PORT=3001`
-- `DUCKDB_PATH=./data/processed/analytics.duckdb`
-- `REDIS_URL=redis://localhost:6379`
-- `ANTHROPIC_API_KEY=<your_key>`
-
-### 3. Start local infrastructure
+### 3) Start Redis
 
 ```bash
-docker compose up -d redis
+docker compose -f docker/docker-compose.yml up -d redis
 ```
 
-### 4. Run migrations and optional seed
+### 4) Run database setup
 
 ```bash
 npm run migrate
 npm run seed
 ```
 
-### 5. Start backend and frontend
-
-Backend:
+### 5) Start app (API + frontend)
 
 ```bash
 npm run dev
 ```
-
-Frontend (if separate app):
-
-```bash
-cd client
-npm run dev
-```
-
-### 6. Access the app
 
 - API: `http://localhost:3001`
 - Frontend: `http://localhost:5173`
 
-## 6) Definition of Done (DoD)
+## Build for production
 
-A release is done when:
-- All upload flows process real sample files successfully
-- Analytics endpoints return validated KPIs for 30/60/90-day filters
-- Dashboard layouts are customizable and persist per user
-- AI insights are generated asynchronously without blocking API requests
-- Test suites pass (unit + integration + load smoke)
-- Docker deployment works end-to-end locally
+```bash
+npm run build
+npm start
+```
 
-## 7) Next Action Items
+## Next implementation steps
 
-1. Scaffold repository structure from specification
-2. Implement ingestion pipeline and DuckDB schema first
-3. Add analytics APIs before UI complexity
-4. Introduce AI/ML only after baseline analytics are stable
+1. Replace analytics scaffold responses with real DuckDB queries against ingested tables.
+2. Implement chunked file upload + job tracking with Redis/BullMQ workers.
+3. Add dashboard widget engine and persisted user layouts.
+4. Add AI/ML async workers and insights endpoints.
 
----
+## Notes
 
-For full functional and schema details, refer to:
-- `EMAIL_ANALYTICS_PLATFORM.md`
+- This is an MVP scaffold intended to accelerate implementation.
+- Detailed architecture and target feature set remain in `EMAIL_ANALYTICS_PLATFORM.md`.
